@@ -11,7 +11,7 @@ the engine's keys (off/placard/geofence/...), so language never affects the mode
 ================================================================================
 """
 
-LANGS = {"English": "en", "Español": "es"}
+LANGS = {"Español": "es", "English": "en"}
 
 STR = {
     # ---- chrome --------------------------------------------------------------
