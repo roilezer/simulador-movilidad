@@ -18,8 +18,8 @@ STR = {
     "lang_label":        {"en": "Language / Idioma", "es": "Language / Idioma"},
     "page_title":        {"en": "Afternoon Pickup Simulator",
                           "es": "Simulador de Recogida de la Tarde"},
-    "main_title":        {"en": "Afternoon Pickup / Not-Ready Simulator",
-                          "es": "Simulador de Recogida de la Tarde / Niño No Listo"},
+    "main_title":        {"en": "Afternoon Pickup Simulator",
+                          "es": "Simulador de Recogida de la Tarde"},
     "main_caption":      {"en": "Placeholder distributions — read direction and rank, "
                                 "not absolute values. Safety is a hard gate, not a score.",
                           "es": "Distribuciones de marcador de posición — lea la dirección y "
