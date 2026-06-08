@@ -43,7 +43,7 @@ def run_with(overrides: dict, n_reps: int):
 
 
 # ============================================================ language selector
-lang_choice = st.sidebar.radio("Language / Idioma", list(LANGS.keys()),
+lang_choice = st.sidebar.radio("Language / Idioma", list(LANGS.keys()),index=1,
                                horizontal=True)
 lang = LANGS[lang_choice]
 
