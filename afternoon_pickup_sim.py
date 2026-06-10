@@ -348,16 +348,22 @@ class AfternoonSim:
 
     # ---- external staging dispatcher ------------------------------------------
     def _staging_dispatcher(self):
-        """Pulls staged cars back to the grounds, metered, when buffer has room."""
+        """Pulls staged cars back to the grounds, metered, when buffer has room.
+        travel_back runs in each car's OWN process so it does not serialize the
+        dispatcher (that serialization throttled throughput to ~1 car/travel_back)."""
         cfg = self.cfg
         while True:
             car = yield self.staging_store.get()   # FIFO; could prioritise ready
-            # wait until buffer has space, then meter the dispatch cadence
-            while self.buffer.level >= cfg.buffer_capacity - 0:
+            # wait until the grounds has room, then meter the dispatch cadence
+            while self.buffer.level >= cfg.buffer_capacity:
                 yield self.env.timeout(0.1)
-            yield self.env.timeout(cfg.staging_travel_back)
-            self.env.process(self._enter_grounds(car, from_staging=True))
+            self.env.process(self._return_from_staging(car))
             yield self.env.timeout(cfg.staging_dispatch_interval)
+
+    def _return_from_staging(self, car):
+        """Drive back from the remote lot (in parallel), then enter the grounds."""
+        yield self.env.timeout(self.cfg.staging_travel_back)
+        yield from self._enter_grounds(car, from_staging=True)
 
     # ---- car lifecycle --------------------------------------------------------
     def _car_process(self, car: Car):
@@ -397,6 +403,7 @@ class AfternoonSim:
         with self.egress.request() as req:
             yield req
             yield self.env.timeout(self._egress_time())
+        self.buffer.get(1)                     # release the grounds slot at departure
         car.depart = self.env.now
         self.completed.append(car)
 
@@ -414,7 +421,6 @@ class AfternoonSim:
         """As-is: hold the spot until the child is ready (head-of-line blocking)."""
         with self.spots.request() as req:
             yield req
-            self.buffer.get(1)                     # leaves buffer, now at a spot
             t0 = self.env.now
             if car.car_ready > self.env.now:
                 car.blocked_time += car.car_ready - self.env.now
@@ -433,8 +439,6 @@ class AfternoonSim:
         while not got_in:
             with self.spots.request() as req:
                 yield req
-                if self.buffer.level > 0:
-                    self.buffer.get(1)
                 wait = car.car_ready - self.env.now
                 if wait <= cfg.holding_grace:
                     if wait > 0:
